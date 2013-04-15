@@ -82,6 +82,12 @@ amqp_os_error_string(int err)
   return strdup(strerror(err));
 }
 
+char *
+amqp_gai_error_string(int err)
+{
+  return strdup(gai_strerror(err));
+}
+
 int
 amqp_os_socket_close(int sockfd)
 {

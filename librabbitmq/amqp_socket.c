@@ -133,7 +133,7 @@ int amqp_open_socket(char const *hostname,
   last_error = getaddrinfo(hostname, portnumber_string, &hint, &address_list);
 
   if (last_error != 0) {
-    return -ERROR_GETHOSTBYNAME_FAILED;
+    return -(ERROR_CATEGORY_GAI | last_error);
   }
 
   for (addr = address_list; addr; addr = addr->ai_next) {

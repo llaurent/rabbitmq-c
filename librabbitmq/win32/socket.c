@@ -83,6 +83,12 @@ amqp_os_error_string(int err)
   return copy;
 }
 
+char *
+amqp_gai_error_string(int err)
+{
+  return amqp_os_error_string(err);
+}
+
 int
 amqp_socket_setsockopt(int sock, int level, int optname,
                        const void *optval, size_t optlen)

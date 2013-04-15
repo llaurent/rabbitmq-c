@@ -57,8 +57,9 @@
  */
 #define ERROR_CATEGORY_CLIENT (0 << 29) /* librabbitmq error codes */
 #define ERROR_CATEGORY_OS (1 << 29) /* OS-specific error codes */
+#define ERROR_CATEGORY_GAI (1 << 30) /* getaddrinfo() has its own set of error codes */
 #define ERROR_CATEGORY_SSL (1 << 28) /* SSL-specific error codes */
-#define ERROR_CATEGORY_MASK (ERROR_CATEGORY_OS | ERROR_CATEGORY_SSL)
+#define ERROR_CATEGORY_MASK (ERROR_CATEGORY_OS | ERROR_CATEGORY_SSL | ERROR_CATEGORY_GAI)
 
 /* librabbitmq error codes */
 #define ERROR_NO_MEMORY 1
@@ -91,6 +92,9 @@
 
 char *
 amqp_os_error_string(int err);
+
+char *
+amqp_gai_error_string(int err);
 
 #ifdef WITH_SSL
 char *

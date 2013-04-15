@@ -75,6 +75,9 @@ char *amqp_error_string(int err)
   case ERROR_CATEGORY_OS:
     return amqp_os_error_string(err);
 
+  case ERROR_CATEGORY_GAI:
+    return amqp_gai_error_string(err);
+
 #ifdef WITH_SSL
   case ERROR_CATEGORY_SSL:
     return amqp_ssl_error_string(err);
