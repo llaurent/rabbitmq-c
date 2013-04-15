@@ -73,7 +73,7 @@ amqp_socket_recv(amqp_socket_t *self, void *buf, size_t len, int flags)
   return self->klass->recv(self, buf, len, flags);
 }
 
-int
+amqp_status_t
 amqp_socket_open(amqp_socket_t *self, const char *host, int port)
 {
   assert(self);

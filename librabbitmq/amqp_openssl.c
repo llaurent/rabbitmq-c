@@ -65,6 +65,7 @@ struct amqp_ssl_socket_t {
   char *buffer;
   size_t length;
   amqp_boolean_t verify;
+  int last_error;
 };
 
 static ssize_t
@@ -144,12 +145,13 @@ amqp_ssl_socket_recv(void *base,
   return received;
 }
 
-static int
+static amqp_status_t
 amqp_ssl_socket_verify(void *base, const char *host)
 {
   struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
   unsigned char *utf8_value = NULL, *cp, ch;
-  int pos, utf8_length, status = 0;
+  int pos, utf8_length;
+  amqp_status_t status = AMQP_STATUS_SUCCESS;
   ASN1_STRING *entry_string;
   X509_NAME_ENTRY *entry;
   X509_NAME *name;
@@ -205,44 +207,66 @@ exit:
   OPENSSL_free(utf8_value);
   return status;
 error:
-  status = -1;
+  status = AMQP_STATUS_SSL_HOSTNAME_VERIFY_FAILURE;
   goto exit;
 }
 
-static int
+static amqp_status_t
 amqp_ssl_socket_open(void *base, const char *host, int port)
 {
   struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
   long result;
   int status;
+
+  self->last_error = 0;
+  /* TODO: Move this to creation so it can be accessed earlier */
   self->ssl = SSL_new(self->ctx);
   if (!self->ssl) {
-    return -1;
+    return AMQP_STATUS_SSL_LIBRARY_ERROR;
   }
+
   SSL_set_mode(self->ssl, SSL_MODE_AUTO_RETRY);
   self->sockfd = amqp_open_socket(host, port);
   if (0 > self->sockfd) {
-    return -1;
+    int err = -self->sockfd;
+    int error_category = (err & ERROR_CATEGORY_MASK);
+    self->last_error = (err & ~ERROR_CATEGORY_MASK);
+    self->sockfd = -1;
+
+    switch (error_category) {
+      case ERROR_CATEGORY_GAI:
+        return AMQP_STATUS_HOSTNAME_RESOLUTION_FAILED;
+
+      case ERROR_CATEGORY_OS:
+        return AMQP_STATUS_SOCKET_ERROR;
+    }
+    return AMQP_STATUS_FAILURE;
   }
+
   status = SSL_set_fd(self->ssl, self->sockfd);
   if (!status) {
-    return -1;
+    return AMQP_STATUS_SSL_LIBRARY_ERROR;
   }
+
   status = SSL_connect(self->ssl);
   if (!status) {
-    return -1;
+    self->last_error = status;
+    return AMQP_STATUS_SSL_LIBRARY_ERROR;
   }
+
   result = SSL_get_verify_result(self->ssl);
   if (X509_V_OK != result) {
-    return -1;
+    self->last_error = result;
+    return AMQP_STATUS_X509_VERIFY_FAILURE;
   }
+
   if (self->verify) {
-    int status = amqp_ssl_socket_verify(self, host);
-    if (status) {
-      return -1;
+    amqp_status_t verify_result = amqp_ssl_socket_verify(self, host);
+    if (AMQP_STATUS_SUCCESS == verify_result) {
+      return verify_result;
     }
   }
-  return 0;
+  return AMQP_STATUS_SUCCESS;
 }
 
 static int

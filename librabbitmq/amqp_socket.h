@@ -37,7 +37,7 @@ AMQP_BEGIN_DECLS
 typedef ssize_t (*amqp_socket_writev_fn)(void *, const struct iovec *, int);
 typedef ssize_t (*amqp_socket_send_fn)(void *, const void *, size_t, int);
 typedef ssize_t (*amqp_socket_recv_fn)(void *, void *, size_t, int);
-typedef int (*amqp_socket_open_fn)(void *, const char *, int);
+typedef amqp_status_t (*amqp_socket_open_fn)(void *, const char *, int);
 typedef int (*amqp_socket_close_fn)(void *);
 typedef int (*amqp_socket_error_fn)(void *);
 typedef int (*amqp_socket_get_sockfd_fn)(void *);

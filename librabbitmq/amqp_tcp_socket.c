@@ -33,6 +33,7 @@
 struct amqp_tcp_socket_t {
   const struct amqp_socket_class_t *klass;
   int sockfd;
+  int last_error;
 };
 
 static ssize_t
@@ -56,15 +57,28 @@ amqp_tcp_socket_recv(void *base, void *buf, size_t len, int flags)
   return recv(self->sockfd, buf, len, flags);
 }
 
-static int
+static amqp_status_t
 amqp_tcp_socket_open(void *base, const char *host, int port)
 {
   struct amqp_tcp_socket_t *self = (struct amqp_tcp_socket_t *)base;
+  self->last_error = 0;
   self->sockfd = amqp_open_socket(host, port);
   if (0 > self->sockfd) {
-    return -1;
+    int err = -self->sockfd;
+    int error_category = (err & ERROR_CATEGORY_MASK);
+    self->last_error = (err & ~ERROR_CATEGORY_MASK);
+    self->sockfd = -1;
+
+    switch (error_category) {
+      case ERROR_CATEGORY_GAI:
+        return AMQP_STATUS_HOSTNAME_RESOLUTION_FAILED;
+
+      case ERROR_CATEGORY_OS:
+        return AMQP_STATUS_SOCKET_ERROR;
+    }
+    return AMQP_STATUS_FAILURE;
   }
-  return 0;
+  return AMQP_STATUS_SUCCESS;
 }
 
 static int

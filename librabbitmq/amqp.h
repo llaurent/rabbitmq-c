@@ -314,6 +314,29 @@ typedef enum amqp_response_type_enum_ {
   AMQP_RESPONSE_SERVER_EXCEPTION
 } amqp_response_type_enum;
 
+typedef enum amqp_status_t_ {
+  AMQP_STATUS_SUCCESS = 0,
+  AMQP_STATUS_NO_MEMORY,
+  AMQP_STATUS_BAD_AMQP_DATA,
+  AMQP_STATUS_UNKNOWN_CLASS,
+  AMQP_STATUS_UNKNOWN_METHOD,
+  AMQP_STATUS_GETHOSTBYNAME_FAILED,
+  AMQP_STATUS_INCOMPATIBLE_AMQP_VERSION,
+  AMQP_STATUS_CONNECTION_CLOSED,
+  AMQP_STATUS_BAD_AMQP_URL,
+
+  AMQP_STATUS_FAILURE,
+
+  AMQP_STATUS_HOSTNAME_RESOLUTION_FAILED,
+  AMQP_STATUS_SOCKET_ERROR,
+
+  AMQP_STATUS_SSL_LIBRARY_ERROR,
+  AMQP_STATUS_X509_VERIFY_FAILURE,
+  AMQP_STATUS_SSL_HOSTNAME_VERIFY_FAILURE,
+
+  AMQP_STATUS_LAST_STATUS
+} amqp_status_t;
+
 typedef struct amqp_rpc_reply_t_ {
   amqp_response_type_enum reply_type;
   amqp_method_t reply;
@@ -610,10 +633,10 @@ AMQP_CALL amqp_parse_url(char *url, struct amqp_connection_info *parsed);
  * \param [in] host Connect to this host.
  * \param [in] port Connect on this remote port.
  *
- * \return Zero upon success, non-zero otherwise.
+ * \return AMQP_STATUS_SUCCESS on success, an error code otherwise
  */
 AMQP_PUBLIC_FUNCTION
-int
+amqp_status_t
 AMQP_CALL
 amqp_socket_open(amqp_socket_t *self, const char *host, int port);
 
